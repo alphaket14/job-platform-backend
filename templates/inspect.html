@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Feed Inspector</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 1em; background-color: #f7f7f7; color: #333; }
+        h1, h2, h3 { color: #444; }
+        .container { max-width: 98%; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-container, .summary, .preview { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; background-color: #fdfdfd;}
+        input[type="number"], input[type="password"], button, select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 1em; }
+        button { background-color: #007bff; color: white; cursor: pointer; border: none; }
+        button:hover { background-color: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
+        th, td { padding: 8px; border: 1px solid #ddd; text-align: left; vertical-align: top; }
+        thead th { position: sticky; top: 0; z-index: 1; }
+        .raw-tag-header { background-color: #e9ecef; }
+        .mapped-tag-header { background-color: #f8f9fa; font-style: italic; color: #555; }
+        .mapped-tag-header select { width: 100%; box-sizing: border-box; }
+        #save-status { margin-left: 1em; font-weight: bold; }
+        .save-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .save-controls label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Feed Inspector</h1>
+        <div class="form-container">
+            <form method="GET" action="/inspect-feed">
+                <label for="feed_id">Enter Feed ID:</label>
+                <input type="number" id="feed_id" name="feed_id" required value="{{ feed_id or '' }}" placeholder="e.g., 21">
+                <button type="submit">Inspect Feed</button>
+            </form>
+        </div>
+
+        {% if results %}
+        <div class="summary">
+            <h2>Feed Summary for Feed ID: {{ feed_id }}</h2>
+        </div>
+
+        <div class="preview">
+            <h2>Job Preview and Mapping Helper</h2>
+            <p>For unmapped tags, use the dropdown to select a target. Then, enter the API key and click Save.</p>
+
+            <div style="overflow-x:auto; max-height: 600px;">
+                <table>
+                    <thead>
+                        <tr class="raw-tag-header">
+                            {% for header in results.table_headers %}
+                                <th>{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                        <tr class="mapped-tag-header">
+                            {% for header in results.table_headers %}
+                                <th>
+                                    {% set current_mapping = results.current_mappings.get(header) %}
+                                    {% if current_mapping %}
+                                        <strong>{{ current_mapping }}</strong>
+                                    {% else %}
+                                        <select class="mapping-select" data-raw-tag="{{ header }}">
+                                            <option value="">-- Unmapped --</option>
+                                            {% for target in results.target_schema_keys|sort %}
+                                                <option value="{{ target }}">{{ target }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% endif %}
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in results.job_preview %}
+                            <tr>
+                                {% for header in results.table_headers %}
+                                    <td>{{ job.get(header, '') }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="save-controls">
+                <label for="apiKey">API Key:</label>
+                <input type="password" id="apiKey" placeholder="Enter key to save" size="30">
+                <button onclick="saveNewMappings()">Save New Mappings</button>
+                <span id="save-status"></span>
+            </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        async function saveNewMappings() {
+            // This JavaScript function is unchanged
+            const statusEl = document.getElementById('save-status');
+            statusEl.textContent = 'Saving...';
+            statusEl.style.color = 'orange';
+
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                statusEl.textContent = "Error: API Key is required.";
+                statusEl.style.color = 'red';
+                return;
+            }
+
+            const selects = document.querySelectorAll('.mapping-select');
+            const newMappings = {};
+            selects.forEach(select => {
+                if (select.value) {
+                    newMappings[select.dataset.rawTag] = select.value;
+                }
+            });
+
+            if (Object.keys(newMappings).length === 0) {
+                statusEl.textContent = "No new mappings were selected.";
+                return;
+            }
+
+            try {
+                const payload = {
+                    new_mappings: newMappings,
+                    api_key: apiKey
+                };
+
+                const response = await fetch('/update-mapping', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusEl.textContent = 'Success! Mappings saved. Reloading...';
+                    statusEl.style.color = 'green';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    statusEl.textContent = `Error: ${result.detail}`;
+                    statusEl.style.color = 'red';
+                }
+            } catch (error) {
+                statusEl.textContent = `Error: ${error.message}`;
+                statusEl.style.color = 'red';
+            }
+        }
+    </script>
+</body>
+</html>
