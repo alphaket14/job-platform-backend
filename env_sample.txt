@@ -1,0 +1,58 @@
+
+# Method 1: Using a single connection string (Recommended for services like Neon, Supabase, or PgBouncer)
+POSTGRES_CONNECTION_STRING=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+
+# Method 2: Using individual parameters (for standard PostgreSQL setups)
+# POSTGRES_HOST=your-db-host
+# POSTGRES_PORT=5432
+# POSTGRES_DB=your-db-name
+# POSTGRES_USER=your-db-user
+# POSTGRES_PASSWORD=your-db-password
+
+# --- Google Cloud & Vertex AI Configuration ---
+GOOGLE_PROJECT_ID=your-gcp-project-id
+# Comma-separated list of GCP regions for the AI models
+GOOGLE_LOCATIONS=us-central1,us-east1,us-east4,us-east5,us-south1,us-west1,us-west4
+
+# Path to your Google Cloud service account JSON file (for authentication)
+GOOGLE_APPLICATION_CREDENTIALS=./path/to/your-service-account-file.json
+
+# --- Xano Configuration ---
+# The API endpoint for your Xano database
+XANO_API_URL=https://your-xano-instance.xano.io/api:xxxxxxxx/jobs
+# Your Xano API Key (if required for authentication)
+XANO_API_KEY=your-xano-api-key
+
+# --- Application & Pipeline Configuration ---
+# Confidence score (0.0 to 1.0) above which jobs are auto-approved
+AUTO_APPROVE_THRESHOLD=0.86
+# Confidence score (0.0 to 1.0) below which jobs are rejected
+MANUAL_REVIEW_THRESHOLD=0.50
+# The Gemini model to use for enrichment
+GEMINI_MODEL="gemini-2.5-flash-lite"
+# Timeout in seconds for a single Gemini API call
+GEMINI_API_TIMEOUT=120
+# Maximum number of concurrent calls to the Gemini API
+MAX_CONCURRENT_AI_CALLS=4000
+# Number of jobs to include in a single batch sent to the AI
+AI_ENRICHMENT_BATCH_SIZE=20
+
+
+# --- Notification Configuration ---
+NOTIFICATIONS_ENABLED=true
+# Type of notification: 'slack', 'email', 'webhook', 'all', or 'none', 'slackweb' - for slack and webhook
+NOTIFICATION_TYPE=all
+
+# Slack Webhook URL (if using Slack notifications)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+
+# Custom Webhook URL (if using webhook notifications)
+CUSTOM_WEBHOOK_URL=https://your-custom-webhook-endpoint.com/notify
+
+# Email Configuration (if using email notifications)
+EMAIL_RECIPIENTS=recipient1@example.com,recipient2@example.com
+SMTP_SERVER=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=your-smtp-username
+SMTP_PASSWORD=your-smtp-password
+SMTP_FROM_EMAIL=sender@example.com

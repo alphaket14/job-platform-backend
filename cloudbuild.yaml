@@ -1,0 +1,15 @@
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+# Step 1: Build the container image...
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/main/job-platform:latest', '.']
+
+# Step 2: Push the container image...
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/main/job-platform:latest']
+
+images:
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/main/job-platform:latest'
